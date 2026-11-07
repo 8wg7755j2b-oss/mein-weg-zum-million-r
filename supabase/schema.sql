@@ -143,7 +143,7 @@ using (public.is_campaign_admin());
 drop policy if exists "Admins write audit log" on public.campaign_audit_log;
 create policy "Admins write audit log"
 on public.campaign_audit_log for insert to authenticated
-with check (public.is_campaign_admin());
+with check (public.is_campaign_admin() and actor = auth.uid());
 
 -- Do not add an admin through the browser. After creating your Auth user,
 -- grant access from the SQL Editor with:
