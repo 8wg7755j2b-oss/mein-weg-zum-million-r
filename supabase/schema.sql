@@ -41,23 +41,47 @@ using (is_published = true);
 -- and supporters whose explicit consent is true. Payment confirmations must be
 -- verified server-side using provider webhooks before status becomes confirmed.
 
-create or replace view public.public_campaign_totals as
-select
-  coalesce(sum(amount), 0)::numeric(12,2) as confirmed_total,
-  count(*)::bigint as supporter_count
-from public.contributions
-where payment_status = 'confirmed';
+-- Public read access is limited to two SECURITY DEFINER RPCs.
+-- Their fixed search_path and narrow return columns prevent direct access to
+-- private contribution records and expose supporter identity only after consent.
+drop view if exists public.public_campaign_totals;
+drop view if exists public.public_supporters;
 
-create or replace view public.public_supporters as
-select display_name, amount, confirmed_at as created_at
-from public.contributions
-where payment_status = 'confirmed'
-  and publish_consent = true
-  and nullif(trim(display_name), '') is not null;
+create or replace function public.public_campaign_totals()
+returns table (confirmed_total numeric, supporter_count bigint)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select
+    coalesce(sum(c.amount), 0)::numeric(12,2),
+    count(*)::bigint
+  from public.contributions as c
+  where c.payment_status = 'confirmed';
+$$;
 
--- IMPORTANT SECURITY TODO before launch:
--- Configure view access explicitly for your Supabase version and expose data
--- through a SECURITY INVOKER view or an Edge Function. Never grant anon access
--- to the underlying contributions table.
--- Create a private admin role / auth policy and server-side payment webhook
--- handlers before accepting any real payments.
+create or replace function public.public_supporters()
+returns table (display_name text, amount numeric, created_at timestamptz)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select c.display_name, c.amount, c.confirmed_at
+  from public.contributions as c
+  where c.payment_status = 'confirmed'
+    and c.publish_consent = true
+    and nullif(trim(c.display_name), '') is not null
+  order by c.confirmed_at desc
+  limit 8;
+$$;
+
+revoke all on function public.public_campaign_totals() from public;
+revoke all on function public.public_supporters() from public;
+grant execute on function public.public_campaign_totals() to anon, authenticated;
+grant execute on function public.public_supporters() to anon, authenticated;
+
+-- IMPORTANT: These RPCs only read. No public insert/update policy exists.
+-- Add server-side payment creation, verified provider webhooks, admin auth,
+-- audit logging and tested authorization before enabling real contributions.
