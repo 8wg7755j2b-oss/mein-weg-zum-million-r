@@ -52,9 +52,18 @@ function App() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const submitInterest = (e) => {
+  const submitInterest = async (e) => {
     e.preventDefault();
-    setNotice('Die Zahlungsfunktion wird gerade eingerichtet. Es wurde keine Zahlung ausgelöst und keine Zahlungszusage gespeichert.');
+    if (!supabase) { setNotice('Die sichere Zahlungsanbindung ist noch nicht konfiguriert.'); return; }
+    const value = Number(amount);
+    if (!Number.isInteger(value) || value < 1 || value > 100000) { setNotice('Bitte einen ganzen Eurobetrag zwischen 1 und 100.000 eingeben.'); return; }
+    setPaying(true); setNotice('');
+    const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+      body: { amount: value, displayName: name, publishConsent: publicConsent }
+    });
+    setPaying(false);
+    if (error || !data?.url) { setNotice('Stripe ist noch nicht vollständig eingerichtet. Es wurde keine Zahlung ausgelöst.'); return; }
+    window.location.assign(data.url);
   };
 
   return (
