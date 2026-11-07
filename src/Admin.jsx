@@ -141,7 +141,7 @@ export default function Admin() {
   }
   function exportCsv() {
     const columns = ['created_at','amount','payment_provider','payment_status','display_name','publish_consent','provider_reference','id'];
-    const quote = value => { const raw = String(value ?? ''); const safe = /^[=+@\\-\\t\\r]/.test(raw) ? "'" + raw : raw; return '"' + safe.replaceAll('"', '""') + '"'; };
+    const quote = value => { const raw = String(value ?? ''); const first = raw.charCodeAt(0); const safe = [61, 43, 45, 64, 9, 13].includes(first) ? "'" + raw : raw; return '"' + safe.replaceAll('"', '""') + '"'; };
     const csv = [columns.join(';'), ...contributions.map(row => columns.map(key => quote(row[key])).join(';'))].join('\r\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
     const href = URL.createObjectURL(blob);
