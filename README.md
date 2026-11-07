@@ -34,6 +34,32 @@ Ein neues, ausschließlich für dieses Projekt bestimmtes Supabase-Projekt erste
 
 **Noch nicht produktionsbereit:** Vor echten Zahlungen müssen sichere serverseitige Endpunkte / Supabase Edge Functions, Admin-Authentifizierung, RLS-Policies und verifizierte Stripe-/PayPal-Webhooks implementiert und getestet werden. Der öffentliche Browser darf niemals Zahlungen als bestätigt markieren. Die aktuelle Zahlungsmaske ist bewusst nur eine Vorschau und startet keine Transaktion.
 
+
+## Adminbereich
+
+- Aufruf über `/admin`
+- Anmeldung über Supabase Auth (E-Mail/Passwort)
+- Zugriff nur für explizit in `public.campaign_admins` freigeschaltete Benutzer
+- Beiträge manuell erfassen und Zahlungsstatus verwalten
+- Kampagnen-Neuigkeiten als Entwurf anlegen und veröffentlichen
+- Verwaltungsaktionen werden im Audit-Log protokolliert
+
+### Admin einmalig freischalten
+
+1. In Supabase unter **Authentication → Users** einen Benutzer für den Betreiber anlegen.
+2. In **SQL Editor** die Datei `supabase/admin_setup.sql` ausführen.
+3. Danach in SQL Editor die folgende Abfrage ausführen und die E-Mail durch die eigene Login-Adresse ersetzen:
+
+```sql
+insert into public.campaign_admins (user_id)
+select id from auth.users where email = 'DEINE-LOGIN-EMAIL';
+```
+
+4. In Vercel muss zusätzlich `VITE_SUPABASE_ANON_KEY` als Environment Variable gesetzt sein.
+5. Danach unter `https://DEINE-DOMAIN/admin` anmelden.
+
+Die Admin-Freigabe darf ausschließlich im Supabase SQL Editor erfolgen. Niemals einen Service-Role-Key im Browser verwenden.
+
 ## Vor Livegang
 
 1. Österreichische Rechts-/Steuerberatung zur konkreten Einordnung der Beiträge und Meldepflichten einholen.
