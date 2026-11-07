@@ -47,6 +47,13 @@ function App() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    const result = new URLSearchParams(window.location.search).get('payment');
+    if (result === 'success') setNotice('Der Stripe-Checkout wurde abgeschlossen. Die Fortschrittsanzeige aktualisiert sich nach Eingang und Prüfung des Zahlungs-Webhooks.');
+    if (result === 'cancelled') setNotice('Der Zahlungsvorgang wurde abgebrochen. Es wurde kein bestätigter Beitrag verbucht.');
+    if (result) window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+  }, []);
+
   const scrollTo = (id) => {
     setMenuOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
