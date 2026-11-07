@@ -5,7 +5,7 @@ import { ArrowDownRight, ArrowRight, CheckCircle2, HeartHandshake, LockKeyhole, 
 import './style.css';
 import Admin from './Admin.jsx';
 
-const GOAL = 1_000_000;
+const DEFAULT_GOAL = 1_000_000;
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://lffbqcqmrftlmjottzcf.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
@@ -13,6 +13,9 @@ const money = new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR
 
 function App() {
   const [raised, setRaised] = useState(0);
+  const [goal, setGoal] = useState(DEFAULT_GOAL);
+  const [heroIntro, setHeroIntro] = useState('Ich teile ein großes persönliches Ziel – den Aufbau eines Vermögens von einer Million Euro. Wer diesen Weg freiwillig unterstützen möchte, kann Teil der Reise werden.');
+  const [purposeText, setPurposeText] = useState('Vollständig offen: freiwillige Unterstützung meines persönlichen Vermögensaufbaus.');
   const [count, setCount] = useState(0);
   const [updates, setUpdates] = useState([]);
   const [supporters, setSupporters] = useState([]);
@@ -21,21 +24,23 @@ function App() {
   const [publicConsent, setPublicConsent] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState('');
-  const percent = useMemo(() => Math.min(100, (raised / GOAL) * 100), [raised]);
+  const percent = useMemo(() => Math.min(100, (raised / goal) * 100), [raised, goal]);
 
   useEffect(() => {
     if (!supabase) return;
     let active = true;
     async function loadCampaign() {
-      const [{ data: totals }, { data: publicSupporters }, { data: news }] = await Promise.all([
+      const [{ data: totals }, { data: publicSupporters }, { data: news }, { data: settings }] = await Promise.all([
         supabase.rpc('public_campaign_totals'),
         supabase.rpc('public_supporters'),
-        supabase.from('campaign_updates').select('id, title, body, published_at').eq('is_published', true).order('published_at', { ascending: false }).limit(5)
+        supabase.from('campaign_updates').select('id, title, body, published_at').eq('is_published', true).order('published_at', { ascending: false }).limit(5),
+        supabase.from('campaign_settings').select('goal_amount, hero_intro, purpose_text').eq('id', true).maybeSingle()
       ]);
       if (!active) return;
       if (totals?.[0]) { setRaised(Number(totals[0].confirmed_total || 0)); setCount(Number(totals[0].supporter_count || 0)); }
       if (publicSupporters) setSupporters(publicSupporters.slice(0, 8));
       if (news) setUpdates(news);
+      if (settings) { setGoal(Number(settings.goal_amount) || DEFAULT_GOAL); setHeroIntro(settings.hero_intro || ''); setPurposeText(settings.purpose_text || ''); }
     }
     loadCampaign();
     return () => { active = false; };
@@ -69,7 +74,7 @@ function App() {
           <div className="hero-copy">
             <div className="eyebrow"><span className="eyebrow-line"/> EIN PERSÖNLICHES CROWDFUNDING-PROJEKT</div>
             <h1>Eine Million.<br/><em>Ein Ziel.</em><br/>Mein Weg.</h1>
-            <p className="hero-lead">Ich teile ein großes persönliches Ziel – den Aufbau eines Vermögens von einer Million Euro. Wer diesen Weg freiwillig unterstützen möchte, kann Teil der Reise werden.</p>
+            <p className="hero-lead">{heroIntro}</p>
             <div className="hero-actions">
               <button className="button button-gold" onClick={() => scrollTo('unterstuetzen')}>Projekt unterstützen <ArrowRight size={17}/></button>
               <button className="text-button" onClick={() => scrollTo('geschichte')}>Mehr erfahren <ArrowDownRight size={17}/></button>
@@ -86,7 +91,7 @@ function App() {
 
         <section className="stats section-wrap" id="fortschritt">
           <div className="stat-label"><span>DER AKTUELLE STAND</span><span className="live-dot"/> <small>{supabase ? 'LIVE-DATEN' : 'VORSCHAU'}</small></div>
-          <div className="progress-heading"><div><span className="muted">Bisher erreicht</span><strong>{money.format(raised)}</strong></div><div className="goal-value"><span className="muted">Mein Ziel</span><strong>{money.format(GOAL)}</strong></div></div>
+          <div className="progress-heading"><div><span className="muted">Bisher erreicht</span><strong>{money.format(raised)}</strong></div><div className="goal-value"><span className="muted">Mein Ziel</span><strong>{money.format(goal)}</strong></div></div>
           <div className="progress-track"><div className="progress-fill" style={{ width: percent + '%' }}/></div>
           <div className="progress-foot"><span>{percent.toFixed(2).replace('.', ',')} % erreicht</span><span>{money.format(Math.max(0, GOAL - raised))} bis zum Ziel</span></div>
           <div className="stat-bottom"><div><TrendingUp/><span><b>{count}</b> bestätigte Unterstützungen</span></div><span className="muted">Aktualisierung nach Zahlungsbestätigung</span></div>
@@ -94,7 +99,7 @@ function App() {
 
         <section className="story section-wrap" id="geschichte">
           <div className="section-kicker">01 / DIE IDEE</div>
-          <div className="story-grid"><h2>Ein persönliches Ziel.<br/><em>Ein offener Weg.</em></h2><div><p>„Mein Weg zum Millionär“ ist ein privates Crowdfunding-Projekt. Ich möchte meinen persönlichen Vermögensaufbau transparent dokumentieren und Menschen die Möglichkeit geben, mich freiwillig dabei zu unterstützen.</p><p>Jeder Beitrag ist freiwillig. Es gibt dafür keine Beteiligung, keine Verzinsung, keine Rückzahlung und keinen Anspruch auf eine Gegenleistung.</p></div></div>
+          <div className="story-grid"><h2>Ein persönliches Ziel.<br/><em>Ein offener Weg.</em></h2><div><p>{purposeText}</p><p>Jeder Beitrag ist freiwillig. Es gibt dafür keine Beteiligung, keine Verzinsung, keine Rückzahlung und keinen Anspruch auf eine Gegenleistung.</p></div></div>
         </section>
 
         <section className="support-section" id="unterstuetzen">
