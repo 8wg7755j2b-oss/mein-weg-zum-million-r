@@ -27,13 +27,13 @@ function App() {
     let active = true;
     async function loadCampaign() {
       const [{ data: totals }, { data: publicSupporters }, { data: news }] = await Promise.all([
-        supabase.from('public_campaign_totals').select('*').maybeSingle(),
-        supabase.from('public_supporters').select('display_name, amount, created_at').order('created_at', { ascending: false }).limit(8),
+        supabase.rpc('public_campaign_totals'),
+        supabase.rpc('public_supporters'),
         supabase.from('campaign_updates').select('id, title, body, published_at').eq('is_published', true).order('published_at', { ascending: false }).limit(5)
       ]);
       if (!active) return;
-      if (totals) { setRaised(Number(totals.confirmed_total || 0)); setCount(Number(totals.supporter_count || 0)); }
-      if (publicSupporters) setSupporters(publicSupporters);
+      if (totals?.[0]) { setRaised(Number(totals[0].confirmed_total || 0)); setCount(Number(totals[0].supporter_count || 0)); }
+      if (publicSupporters) setSupporters(publicSupporters.slice(0, 8));
       if (news) setUpdates(news);
     }
     loadCampaign();
