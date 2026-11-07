@@ -69,3 +69,19 @@ Die Admin-Freigabe darf ausschließlich im Supabase SQL Editor erfolgen. Niemals
 5. Adminbereich mit serverseitiger Autorisierung und Audit-Log ergänzen.
 6. Sicherheits- und Zahlungstests durchführen.
 \n\n## Neueste Admin-Erweiterung\n\nNach dem Admin-Migrationsskript muss zusätzlich `supabase/campaign_settings.sql` im SQL Editor ausgeführt werden. Erst danach kann der Adminbereich das Ziel und die Startseitentexte dauerhaft speichern. Der CSV-Export umfasst die letzten 1.000 geladenen Datensätze.\n
+## Stripe-Zahlungen (Backend-Code vorhanden, noch nicht live)
+
+Die Edge Functions liegen unter:
+- `supabase/functions/create-stripe-checkout/index.ts`
+- `supabase/functions/stripe-webhook/index.ts`
+
+Vor dem Einsatz:
+1. Stripe-Konto vollständig einrichten und Testmodus verwenden.
+2. Supabase CLI mit genau diesem Supabase-Projekt verbinden.
+3. Function-Secrets setzen: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SITE_URL` (exakte öffentliche HTTPS-URL).
+4. Supabase Edge Functions `create-stripe-checkout` und `stripe-webhook` deployen.
+5. In Stripe einen Webhook auf `https://<PROJECT-REF>.supabase.co/functions/v1/stripe-webhook` anlegen und mindestens `checkout.session.completed` sowie `checkout.session.expired` abonnieren.
+6. Zuerst mit kleinen Testzahlungen prüfen: erfolgreicher Checkout, Abbruch, abgelaufene Session, Webhook-Signatur und Fortschrittsanzeige.
+7. Erst nach erfolgreichen Tests auf Live-Schlüssel wechseln und die Domain in Stripe prüfen.
+
+Der Stripe-Checkout verwendet Kartenzahlung. Apple Pay/Google Pay können Stripe-seitig erscheinen, wenn Konto, Domain, Browser und Gerät die Voraussetzungen erfüllen. PayPal ist noch nicht integriert. Niemals Secret Keys in VITE_-Variablen oder im Frontend hinterlegen. Die Service-Role- und Stripe-Schlüssel gehören ausschließlich in Supabase Function Secrets.
