@@ -68,7 +68,11 @@ Die Admin-Freigabe darf ausschließlich im Supabase SQL Editor erfolgen. Niemals
 4. Banküberweisungsprozess und Abgleich definieren.
 5. Adminbereich mit serverseitiger Autorisierung und Audit-Log ergänzen.
 6. Sicherheits- und Zahlungstests durchführen.
-\n\n## Neueste Admin-Erweiterung\n\nNach dem Admin-Migrationsskript muss zusätzlich `supabase/campaign_settings.sql` im SQL Editor ausgeführt werden. Erst danach kann der Adminbereich das Ziel und die Startseitentexte dauerhaft speichern. Der CSV-Export umfasst die letzten 1.000 geladenen Datensätze.\n
+
+
+## Neueste Admin-Erweiterung
+
+Nach dem Admin-Migrationsskript muss zusätzlich `supabase/campaign_settings.sql` im SQL Editor ausgeführt werden. Erst danach kann der Adminbereich das Ziel und die Startseitentexte dauerhaft speichern. Der CSV-Export umfasst die letzten 1.000 geladenen Datensätze.\n
 ## Stripe-Zahlungen (Backend-Code vorhanden, noch nicht live)
 
 Die Edge Functions liegen unter:
