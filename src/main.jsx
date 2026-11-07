@@ -24,6 +24,7 @@ function App() {
   const [publicConsent, setPublicConsent] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState('');
+  const [paying, setPaying] = useState(false);
   const percent = useMemo(() => Math.min(100, (raised / goal) * 100), [raised, goal]);
 
   useEffect(() => {
@@ -104,7 +105,7 @@ function App() {
 
         <section className="support-section" id="unterstuetzen">
           <div className="section-wrap support-grid">
-            <div><div className="section-kicker">02 / MITGEHEN</div><h2>Wenn du möchtest,<br/><em>unterstütze den Weg.</em></h2><p>Wähle einen Betrag als unverbindliche Vorschau. Die sichere Zahlungsabwicklung wird erst nach Einrichtung und Prüfung der Zahlungsanbieter freigeschaltet.</p><div className="secure-note"><LockKeyhole size={17}/> Keine Zahlungsdaten werden auf dieser Vorschauseite abgefragt.</div></div>
+            <div><div className="section-kicker">02 / MITGEHEN</div><h2>Wenn du möchtest,<br/><em>unterstütze den Weg.</em></h2><p>Wähle einen Betrag als unverbindliche Vorschau. Die Zahlung wird über Stripe abgewickelt, sobald die serverseitige Stripe-Anbindung eingerichtet und getestet ist.</p><div className="secure-note"><LockKeyhole size={17}/> Keine Zahlungsdaten werden auf dieser Vorschauseite abgefragt.</div></div>
             <form className="donate-card" onSubmit={submitInterest}>
               <div className="card-top"><HeartHandshake/><span>FREIWILLIGE UNTERSTÜTZUNG</span></div>
               <label>Beitragsbetrag</label>
@@ -112,9 +113,9 @@ function App() {
               <div className="amount-input"><span>€</span><input aria-label="Eigener Betrag in Euro" type="number" min="1" max="100000" step="1" value={amount} onChange={e => setAmount(e.target.value)} required/></div>
               <label className="field-label">Anzeigename (optional)</label><input className="name-input" value={name} onChange={e => setName(e.target.value)} placeholder="Wie darf ich dich nennen?"/>
               <label className="consent"><input type="checkbox" checked={publicConsent} onChange={e => setPublicConsent(e.target.checked)}/><span>Ich möchte, dass mein Name und mein Beitrag nach erfolgreicher Zahlung öffentlich angezeigt werden. Ohne Zustimmung bleibe ich anonym.</span></label>
-              <button className="button button-gold full" type="submit">Weiter zur Unterstützung <ArrowRight size={17}/></button>
+              <button className="button button-gold full" type="submit" disabled={paying}>{paying ? 'Weiterleitung zu Stripe …' : 'Sicher mit Stripe fortfahren'} <ArrowRight size={17}/></button>
               {notice && <p className="notice" role="status">{notice}</p>}
-              <p className="fine-print">Noch keine Zahlung möglich. Die Betragseingabe ist derzeit nur eine Vorschau und löst keine Transaktion aus.</p>
+              <p className="fine-print">Stripe-Zahlungen werden erst nach Einrichtung der Edge Functions, Secrets und Webhooks angenommen. Ohne diese Konfiguration wird keine Zahlung ausgelöst.</p>
             </form>
           </div>
         </section>
