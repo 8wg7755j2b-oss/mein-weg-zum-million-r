@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import { ArrowDownRight, ArrowRight, CheckCircle2, HeartHandshake, LockKeyhole, Menu, ShieldCheck, Sparkles, Target, TrendingUp, X } from 'lucide-react';
 import './style.css';
+import Admin from './Admin.jsx';
 
 const GOAL = 1_000_000;
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://lffbqcqmrftlmjottzcf.supabase.co';
@@ -126,4 +127,4 @@ function App() {
   );
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+createRoot(document.getElementById('root')).render(window.location.pathname === '/admin' ? <Admin /> : <App />);
