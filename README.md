@@ -42,29 +42,30 @@ Ein neues, ausschließlich für dieses Projekt bestimmtes Supabase-Projekt erste
 - Zugriff nur für explizit in `public.campaign_admins` freigeschaltete Benutzer
 - Beiträge manuell erfassen und Zahlungsstatus verwalten
 - Kampagnen-Neuigkeiten als Entwurf anlegen und veröffentlichen
-- Verwaltungsaktionen werden im Audit-Log protokolliert
+- Verwaltungsaktionen werden im Audit-Log protokolliert\n- Kampagnenziel und öffentliche Einleitungstexte bearbeiten\n- CSV-Export der letzten 1.000 geladenen Beitragseinträge\n- Letzte Verwaltungsaktionen im Adminbereich einsehen
 
 ### Admin einmalig freischalten
 
 1. In Supabase unter **Authentication → Users** einen Benutzer für den Betreiber anlegen.
-2. In **SQL Editor** die Datei `supabase/admin_setup.sql` ausführen.
-3. Danach in SQL Editor die folgende Abfrage ausführen und die E-Mail durch die eigene Login-Adresse ersetzen:
+2. In **SQL Editor** die Datei `supabase/admin_setup.sql` ausführen.\n3. Danach die Datei `supabase/campaign_settings.sql` ausführen, damit Zielbetrag und öffentliche Texte bearbeitbar sind.
+4. Danach in SQL Editor die folgende Abfrage ausführen und die E-Mail durch die eigene Login-Adresse ersetzen:
 
 ```sql
 insert into public.campaign_admins (user_id)
 select id from auth.users where email = 'DEINE-LOGIN-EMAIL';
 ```
 
-4. In Vercel muss zusätzlich `VITE_SUPABASE_ANON_KEY` als Environment Variable gesetzt sein.
-5. Danach unter `https://DEINE-DOMAIN/admin` anmelden.
+5. In Vercel muss zusätzlich `VITE_SUPABASE_ANON_KEY` als Environment Variable gesetzt sein.
+6. Danach unter `https://DEINE-DOMAIN/admin` anmelden.
 
 Die Admin-Freigabe darf ausschließlich im Supabase SQL Editor erfolgen. Niemals einen Service-Role-Key im Browser verwenden.
 
 ## Vor Livegang
 
 1. Österreichische Rechts-/Steuerberatung zur konkreten Einordnung der Beiträge und Meldepflichten einholen.
-2. Impressum, Datenschutz, Kontakt und Kampagnenbedingungen mit echten Betreiberangaben ergänzen.
+2. Impressum, Datenschutz, Kontakt und Kampagnenbedingungen mit echten Betreiberangaben ergänzen. Die Platzhalter im Bereich „Rechtliches“ sind ausdrücklich noch keine fertigen Rechtstexte.
 3. Stripe-/PayPal-Konten einrichten und Webhooks serverseitig verifizieren.
 4. Banküberweisungsprozess und Abgleich definieren.
 5. Adminbereich mit serverseitiger Autorisierung und Audit-Log ergänzen.
 6. Sicherheits- und Zahlungstests durchführen.
+\n\n## Neueste Admin-Erweiterung\n\nNach dem Admin-Migrationsskript muss zusätzlich `supabase/campaign_settings.sql` im SQL Editor ausgeführt werden. Erst danach kann der Adminbereich das Ziel und die Startseitentexte dauerhaft speichern. Der CSV-Export umfasst die letzten 1.000 geladenen Datensätze.\n
