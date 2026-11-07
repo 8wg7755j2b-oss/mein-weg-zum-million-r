@@ -37,3 +37,25 @@ grant select, insert, update, delete on public.contributions to authenticated;
 
 -- Verify the expected settings row exists.
 select id, goal_amount, updated_at from public.campaign_settings where id = true;
+
+-- Payment status for Stripe/PayPal is changed only by verified server-side webhooks.
+create or replace function public.protect_external_payment_status()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  if old.payment_provider in ('stripe', 'paypal')
+     and new.payment_status is distinct from old.payment_status
+     and coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'External payment status can only be changed by a verified server-side webhook';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_external_payment_status on public.contributions;
+create trigger protect_external_payment_status
+before update on public.contributions
+for each row execute function public.protect_external_payment_status();
